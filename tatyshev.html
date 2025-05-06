@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tatyshev Park - Krasnoyarsk</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(to top, rgba(255,255,0,0.8) 0%, rgba(127,255,0,0.8) 50%, rgba(255,255,255,0) 100%);
+            z-index: -1;
+            pointer-events: none;
+            transition: height 0.5s ease;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 60px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .tile-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+        
+        .tile {
+            flex: 1;
+            height: 150px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .photo-tile {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+        }
+        
+        .info-tile {
+            background: linear-gradient(135deg, #32CD32, #228B22);
+        }
+        
+        .history-tile {
+            background: rgb(201, 255, 34);
+            width: 100%;
+            height: 120px;
+            margin-bottom: 30px;
+        }
+        
+        .map-tile, .reviews-tile {
+            width: 100%;
+            margin-bottom: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .map-tile:hover, .reviews-tile:hover {
+            transform: translateY(-3px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+        
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .photo-gallery img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .photo-gallery img:hover {
+            transform: scale(1.03);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #555;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .info-content {
+            padding: 15px;
+        }
+        
+        .info-content p {
+            margin-bottom: 15px;
+            line-height: 1.7;
+            color: #444;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #f1f1f1;
+            padding-bottom: 10px;
+        }
+        
+        /* Fullscreen image styles */
+        .fullscreen-image {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .fullscreen-image.show {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .fullscreen-image img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+        
+        .fullscreen-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            z-index: 201;
+        }
+        
+        .history-content {
+            padding: 15px;
+        }
+        
+        .history-content p {
+            margin-bottom: 15px;
+            line-height: 1.7;
+            color: #444;
+        }
+        
+        .history-content strong {
+            font-weight: bold;
+            display: block;
+            margin-top: 20px;
+            color: #2c3e50;
+        }
+        
+        .ai-note {
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+            margin-top: 5px;
+            cursor: pointer;
+            font-style: italic;
+        }
+        
+        .history-image {
+            width: 100%;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .tile-container {
+                flex-direction: column;
+            }
+            
+            .tile {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .modal-content {
+                width: 90%;
+                padding: 20px;
+            }
+            
+            .photo-gallery {
+                grid-template-columns: 1fr;
+            }
+            
+            .fullscreen-close {
+                top: 15px;
+                right: 15px;
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tatyshev Park</h1>
+        
+        <div class="tile-container">
+            <div class="tile photo-tile" onclick="openModal('photos')">
+                View Photos
+            </div>
+            <div class="tile info-tile" onclick="openModal('info')">
+                Park Information
+            </div>
+        </div>
+        
+        <div class="tile history-tile" onclick="openModal('history')">
+            History of the park
+        </div>
+        
+        <div class="map-tile">
+            <div style="position:relative;overflow:hidden;">
+                <a href="https://yandex.ru/maps/org/tatyshev_park/225048424216/?utm_medium=mapframe&utm_source=maps" style="color:#eee;font-size:12px;position:absolute;top:0px;">Татышев-парк</a>
+                <a href="https://yandex.ru/maps/62/krasnoyarsk/category/park/184106346/?utm_medium=mapframe&utm_source=maps" style="color:#eee;font-size:12px;position:absolute;top:14px;">Парк культуры и отдыха в Красноярске</a>
+                <iframe src="https://yandex.ru/map-widget/v1/?ll=92.950840%2C56.023503&mode=search&oid=225048424216&ol=biz&z=14.07" width="100%" height="400" frameborder="1" allowfullscreen="true" style="position:relative;"></iframe>
+            </div>
+        </div>
+        
+        <div class="reviews-tile">
+            <div style="width:100%;height:800px;overflow:hidden;position:relative;">
+                <iframe style="width:100%;height:100%;border:1px solid #e6e6e6;border-radius:8px;box-sizing:border-box" src="https://yandex.ru/maps-reviews-widget/225048424216?comments"></iframe>
+                <a href="https://yandex.ru/maps/org/tatyshev_park/225048424216/" target="_blank" style="box-sizing:border-box;text-decoration:none;color:#b3b3b3;font-size:10px;font-family:YS Text,sans-serif;padding:0 20px;position:absolute;bottom:8px;width:100%;text-align:center;left:0;overflow:hidden;text-overflow:ellipsis;display:block;max-height:14px;white-space:nowrap;padding:0 16px;box-sizing:border-box">Tatyshev Park on Yandex Maps</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Photo Modal -->
+    <div id="photosModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Tatyshev Park Photos</h2>
+            <div class="photo-gallery">
+                <img src="татышев_1.png" alt="Tatyshev Park view 1" onclick="openFullscreenImage('татышев_1.png', 'Tatyshev Park view 1')">
+                <img src="татышев_2.png" alt="Tatyshev Park view 2" onclick="openFullscreenImage('татышев_2.png', 'Tatyshev Park view 2')">
+                <img src="татышев_3.png" alt="Tatyshev Park view 3" onclick="openFullscreenImage('татышев_3.png', 'Tatyshev Park view 3')">
+                <img src="татышев_4.png" alt="Tatyshev Park view 4" onclick="openFullscreenImage('татышев_4.png', 'Tatyshev Park view 4')">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Tatyshev Park Information</h2>
+            <div class="info-content">
+                <p>Tatyshev Park is the largest park in Krasnoyarsk, located on an island in the middle of the Yenisei River.</p>
+                <p>It's famous for its well-maintained bike paths, sandy beach, and winter skating rinks.</p>
+                <p>Visitors can cycle, work out, swim in summer, and ski in winter.</p>
+                <p>Interestingly, the island is named after Prince Tatysh, an ally of Russian pioneers.</p>
+                <p>The park gained even more popularity after a major upgrade for the 2019 Universiade.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Tatyshev Park History</h2>
+            <div class="history-content" id="historyText">
+                <strong>Origin of the name</strong>
+                <p>Tatyshev Island is named after Prince Tatysh, a representative of the local Turkic tribe who lived in these places before the arrival of Russian settlers. In the 17th century, the island was used as a pasture and hunting grounds.</p>
+                
+                <strong>The Soviet period and development</strong>
+                <p>In the 20th century, the island remained undeveloped for a long time. In the 1970s and 1980s, suburban areas were located here, as well as agricultural work. In the 1980s, the first attempts at landscaping began, but no large-scale development took place.</p>
+                
+                <strong>Modern history: the creation of the park</strong>
+                <p>2006 — Krasnoyarsk City Hall announced plans to create a large recreational park on Tatyshev Island.</p>
+                <p>2010 — active landscaping began: construction of bike paths, pedestrian zones, and sports fields.</p>
+                <p>2012 — a cable-stayed bridge (pedestrian and bicycle) was opened, connecting the island with the right bank of Krasnoyarsk.</p>
+                <p>2014 — the park was officially opened to the public.</p>
+                
+                <img src="татышев_5.png" alt="Historical view of Tatyshev Park" class="history-image" onclick="openFullscreenImage('татышев_5.png', 'Historical view of Tatyshev Park')">
+                <div class="ai-note" onclick="translateAINote(this)">*the picture is made by AI, there may be inaccuracies</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fullscreen Image -->
+    <div id="fullscreenImage" class="fullscreen-image">
+        <span class="fullscreen-close" onclick="closeFullscreenImage()">&times;</span>
+        <img id="fullscreenImageContent" src="" alt="">
+    </div>
+    
+    <script>
+        function openModal(type) {
+            const modal = document.getElementById(type + 'Modal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.classList.remove('show');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            });
+            document.body.style.overflow = '';
+        }
+        
+        function openFullscreenImage(src, alt) {
+            const fullscreen = document.getElementById('fullscreenImage');
+            const img = document.getElementById('fullscreenImageContent');
+            img.src = src;
+            img.alt = alt;
+            fullscreen.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeFullscreenImage() {
+            document.getElementById('fullscreenImage').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        function translateHistory() {
+            const historyContent = document.getElementById('historyText');
+            if (historyContent.innerHTML.includes('Origin of the name')) {
+                // Translate to Russian
+                historyContent.innerHTML = `
+                    <strong>Происхождение названия</strong>
+                    <p>Остров Татышев назван в честь князя Татыша, представителя местного тюркского племени, жившего в этих местах до прихода русских поселенцев. В 17 веке остров использовался как пастбище и охотничьи угодья.</p>
+                    
+                    <strong>Советский период и развитие</strong>
+                    <p>В 20 веке остров долгое время оставался незастроенным. В 1970-х и 1980-х годах здесь располагались пригородные зоны, а также велись сельскохозяйственные работы. В 1980-х годах начались первые попытки озеленения, но масштабной застройки не последовало.</p>
+                    
+                    <strong>Современная история: создание парка</strong>
+                    <p>2006 — Мэрия Красноярска объявила о планах по созданию крупного парка отдыха на острове Татышев.</p>
+                    <p>2010 год — началось активное благоустройство: строительство велосипедных дорожек, пешеходных зон и спортивных площадок.</p>
+                    <p>2012 год — открыт вантовый мост (пешеходный и велосипедный), соединяющий остров с правобережьем Красноярска.</p>
+                    <p>2014 — парк был официально открыт для публики.</p>
+                    
+                    <img src="татышев_5.png" alt="Historical view of Tatyshev Park" class="history-image" onclick="openFullscreenImage('татышев_5.png', 'Historical view of Tatyshev Park')">
+                    <div class="ai-note" onclick="translateAINote(this)">*картинка сделана ИИ, могут быть неточности</div>
+                `;
+            } else {
+                // Translate back to English
+                historyContent.innerHTML = `
+                    <strong>Origin of the name</strong>
+                    <p>Tatyshev Island is named after Prince Tatysh, a representative of the local Turkic tribe who lived in these places before the arrival of Russian settlers. In the 17th century, the island was used as a pasture and hunting grounds.</p>
+                    
+                    <strong>The Soviet period and development</strong>
+                    <p>In the 20th century, the island remained undeveloped for a long time. In the 1970s and 1980s, suburban areas were located here, as well as agricultural work. In the 1980s, the first attempts at landscaping began, but no large-scale development took place.</p>
+                    
+                    <strong>Modern history: the creation of the park</strong>
+                    <p>2006 — Krasnoyarsk City Hall announced plans to create a large recreational park on Tatyshev Island.</p>
+                    <p>2010 — active landscaping began: construction of bike paths, pedestrian zones, and sports fields.</p>
+                    <p>2012 — a cable-stayed bridge (pedestrian and bicycle) was opened, connecting the island with the right bank of Krasnoyarsk.</p>
+                    <p>2014 — the park was officially opened to the public.</p>
+                    
+                    <img src="татышев_5.png" alt="Historical view of Tatyshev Park" class="history-image" onclick="openFullscreenImage('татышев_5.png', 'Historical view of Tatyshev Park')">
+                    <div class="ai-note" onclick="translateAINote(this)">*the picture is made by AI, there may be inaccuracies</div>
+                `;
+            }
+        }
+        
+        function translateAINote(element) {
+            if (element.textContent.includes('the picture is made by AI')) {
+                element.textContent = '*картинка сделана ИИ, могут быть неточности';
+            } else {
+                element.textContent = '*the picture is made by AI, there may be inaccuracies';
+            }
+        }
+        
+        // Close modal when clicking outside content
+        window.onclick = function(event) {
+            if (event.target.className === 'modal show') {
+                closeModal();
+            }
+            if (event.target.className === 'fullscreen-image show') {
+                closeFullscreenImage();
+            }
+            if (event.target.closest('.history-content')) {
+                translateHistory();
+            }
+        }
+        
+        // Close with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeFullscreenImage();
+            }
+        });
+    </script>
+</body>
+</html>
